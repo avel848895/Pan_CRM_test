@@ -168,6 +168,8 @@ function renderClients(data) {
         { label: 'Nombre', render: r => getClientName(r) },
         { label: 'Especialidad', key: 'specialty' },
         { label: 'Ciudad', key: 'city' },
+        { label: 'Zona', key: 'zona' },
+        { label: 'Dirección', key: 'direccion' },
         { label: 'Nivel', render: r => `<span class="${badgeClass(r.relationship_level)}">${r.relationship_level}</span>` },
         { label: 'Funnel', render: r => `<span class="${badgeClass(r.client_status)}">${r.client_status}</span>` },
         { label: 'Actividad', render: r => `<span class="${badgeClass(r.activity_status)}">${r.activity_status}</span>` },
@@ -181,9 +183,11 @@ function filterClients() {
     const type = document.getElementById('filterClientType').value;
     const status = document.getElementById('filterClientStatus').value;
     const activity = document.getElementById('filterActivityStatus').value;
+    const zona = document.getElementById('filterZona').value;
     if (type) data = data.filter(c => c.client_type === type);
     if (status) data = data.filter(c => c.client_status === status);
     if (activity) data = data.filter(c => c.activity_status === activity);
+    if (zona) data = data.filter(c => c.zona === zona);
     renderClients(data);
 }
 
@@ -367,7 +371,8 @@ function showModal(type) {
             { row: [{ label: 'Tipo', name: 'client_type', type: 'select', options: ['Doctor','Hospital','Clínica','Farmacia'] }, { label: 'Especialidad', name: 'specialty' }] },
             { row: [{ label: 'Institución', name: 'institution_name' }, { label: 'Doctor', name: 'doctor_name' }] },
             { row: [{ label: 'Teléfono', name: 'phone' }, { label: 'Email', name: 'email' }] },
-            { row: [{ label: 'Ciudad', name: 'city' }, { label: 'País', name: 'country', value: 'Panamá' }] },
+            { row: [{ label: 'Ciudad', name: 'city' }, { label: 'Zona', name: 'zona', type: 'select', options: ['Zona Central','Zona Norte','Zona Este','Zona Occidente','Zona Atlántico','Zona Central Interior'] }] },
+            { row: [{ label: 'Dirección', name: 'direccion' }, { label: 'País', name: 'country', value: 'Panamá' }] },
             { row: [{ label: 'Nivel Relación', name: 'relationship_level', type: 'select', options: ['Alto','Medio','Bajo'] }, { label: 'Representante', name: 'sales_representative' }] },
             { label: 'Notas', name: 'notes', type: 'textarea' }
         ]},
@@ -399,9 +404,10 @@ function showModal(type) {
             { row: [{ label: 'Próx. Acción', name: 'next_action' }, { label: 'Fecha Seguimiento', name: 'followup_date', type: 'date' }] }
         ]},
         paymentModal: { title: 'Nuevo Pago', fields: [
-            { row: [{ label: 'Pedido ID', name: 'order_id', type: 'number' }, { label: 'Factura', name: 'invoice_number' }] },
-            { row: [{ label: 'Monto', name: 'amount', type: 'number' }, { label: 'Fecha', name: 'payment_date', type: 'date' }] },
-            { row: [{ label: 'Método', name: 'payment_method', type: 'select', options: ['Transferencia','Cheque','Efectivo','Tarjeta','Crédito'] }, { label: 'Estado', name: 'payment_status', type: 'select', options: ['Completo','Parcial','Pendiente','Rechazado'] }] }
+            { row: [{ label: 'Cliente', name: 'client_id', type: 'client_select' }, { label: 'Pedido ID', name: 'order_id', type: 'number' }] },
+            { row: [{ label: 'Factura', name: 'invoice_number' }, { label: 'Monto', name: 'amount', type: 'number' }] },
+            { row: [{ label: 'Fecha', name: 'payment_date', type: 'date' }, { label: 'Método', name: 'payment_method', type: 'select', options: ['Transferencia','Cheque','Efectivo','Tarjeta','Crédito'] }] },
+            { label: 'Estado', name: 'payment_status', type: 'select', options: ['Completo','Parcial','Pendiente','Rechazado'] }
         ]}
     };
     
@@ -417,7 +423,13 @@ function showModal(type) {
 
 function renderField(f) {
     let input;
-    if (f.type === 'select') {
+    if (f.type === 'client_select') {
+        const clientOptions = CRM_DATA.clients.map(c => {
+            const name = getClientName(c);
+            return `<option value="${c.client_id}">${c.client_id} — ${name}</option>`;
+        }).join('');
+        input = `<select class="form-select" name="${f.name}"><option value="">Seleccionar cliente...</option>${clientOptions}</select>`;
+    } else if (f.type === 'select') {
         input = `<select class="form-select" name="${f.name}">${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}</select>`;
     } else if (f.type === 'textarea') {
         input = `<textarea class="form-textarea" name="${f.name}"></textarea>`;
