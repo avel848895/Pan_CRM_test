@@ -9,6 +9,8 @@ const pct = (n) => `${n.toFixed(1)}%`;
 const getClientName = (c) => c.institution_name || c.doctor_name || c.name || '—';
 const getProductByName = (name) => CRM_DATA.products.find(p => p.medicine_name === name);
 const getClientById = (id) => CRM_DATA.clients.find(c => c.client_id === id);
+const getProductById = (id) => CRM_DATA.products.find(p => p.product_id === id);
+const getProductName = (id) => { const p = getProductById(id); return p ? p.medicine_name : '—'; };
 
 // --- LocalStorage Persistence ---
 function saveToStorage() {
