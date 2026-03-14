@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PANAGRO CRM - Sistema de gestión de relaciones con clientes para distribución farmacéutica">
+    <title>PANAGRO CRM | Dashboard Farmacéutico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">P</div>
+                <span class="logo-text">PANAGRO CRM</span>
+            </div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" data-section="dashboard">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Dashboard</span>
+            </li>
+            <li class="nav-item" data-section="clients">
+                <span class="nav-icon">👥</span>
+                <span class="nav-text">Clientes</span>
+            </li>
+            <li class="nav-item" data-section="products">
+                <span class="nav-icon">💊</span>
+                <span class="nav-text">Productos</span>
+            </li>
+            <li class="nav-item" data-section="pipeline">
+                <span class="nav-icon">📈</span>
+                <span class="nav-text">Pipeline</span>
+            </li>
+            <li class="nav-item" data-section="orders">
+                <span class="nav-icon">📦</span>
+                <span class="nav-text">Pedidos</span>
+            </li>
+            <li class="nav-item" data-section="interactions">
+                <span class="nav-icon">💬</span>
+                <span class="nav-text">Interacciones</span>
+            </li>
+            <li class="nav-item" data-section="payments">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">Pagos</span>
+            </li>
+            <li class="nav-item" data-section="import">
+                <span class="nav-icon">📥</span>
+                <span class="nav-text">Importar Datos</span>
+            </li>
+            <li class="nav-item" data-section="kpis">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-text">KPIs</span>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">AC</div>
+                <div class="user-details">
+                    <span class="user-name">Admin</span>
+                    <span class="user-role">Gerente Comercial</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            <div class="top-bar-actions">
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar..." id="globalSearch">
+                </div>
+                <div class="notification-bell" id="notificationBell">
+                    🔔
+                    <span class="notification-badge" id="notifBadge">3</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section class="content-section active" id="section-dashboard">
+            <!-- KPI Summary Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-revenue">
+                    <div class="kpi-icon">💵</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Ingresos del Mes</span>
+                        <span class="kpi-value" id="kpiMonthlyRevenue">$0</span>
+                        <span class="kpi-trend positive" id="kpiRevenueTrend">+0%</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-orders">
+                    <div class="kpi-icon">📦</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Pedidos del Mes</span>
+                        <span class="kpi-value" id="kpiMonthlyOrders">0</span>
+                        <span class="kpi-trend positive" id="kpiOrdersTrend">+0%</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-pipeline">
+                    <div class="kpi-icon">📈</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Pipeline Activo</span>
+                        <span class="kpi-value" id="kpiPipelineValue">$0</span>
+                        <span class="kpi-trend" id="kpiPipelineTrend">0 oportunidades</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-clients">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Clientes Activos</span>
+                        <span class="kpi-value" id="kpiActiveClients">0</span>
+                        <span class="kpi-trend" id="kpiChurnRate">Churn: 0%</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-conversion">
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Tasa de Conversión</span>
+                        <span class="kpi-value" id="kpiConversionRate">0%</span>
+                        <span class="kpi-trend" id="kpiConversionDetail">0 de 0</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-margin">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Margen Bruto</span>
+                        <span class="kpi-value" id="kpiGrossMargin">0%</span>
+                        <span class="kpi-trend" id="kpiMarginDetail">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3 class="chart-title">Pipeline por Etapa</h3>
+                    <div class="pipeline-funnel" id="pipelineFunnel"></div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Top 5 Productos por Ingresos</h3>
+                    <div class="chart-bars" id="topProductsChart"></div>
+                </div>
+            </div>
+
+            <!-- Tables Row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3 class="chart-title">Últimos Pedidos</h3>
+                    <div class="mini-table" id="recentOrdersTable"></div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Seguimientos Pendientes</h3>
+                    <div class="mini-table" id="pendingFollowups"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Clients Section -->
+        <section class="content-section" id="section-clients">
+            <div class="section-header">
+                <h2>Gestión de Clientes</h2>
+                <button class="btn-primary" onclick="showModal('clientModal')">+ Nuevo Cliente</button>
+            </div>
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <select id="filterClientType" onchange="filterClients()">
+                    <option value="">Todos los Tipos</option>
+                    <option value="Doctor">Doctor</option>
+                    <option value="Hospital">Hospital</option>
+                    <option value="Clínica">Clínica</option>
+                    <option value="Farmacia">Farmacia</option>
+                </select>
+                <select id="filterClientStatus" onchange="filterClients()">
+                    <option value="">Todos los Estados</option>
+                    <option value="Potencial">Potencial</option>
+                    <option value="Contactado">Contactado</option>
+                    <option value="Propuesta">Propuesta</option>
+                    <option value="Negociación">Negociación</option>
+                    <option value="Cerrado">Cerrado</option>
+                </select>
+                <select id="filterActivityStatus" onchange="filterClients()">
+                    <option value="">Todas las Actividades</option>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                    <option value="Perdido">Perdido</option>
+                </select>
+            </div>
+            <div class="data-table-container" id="clientsTable"></div>
+        </section>
+
+        <!-- Products Section -->
+        <section class="content-section" id="section-products">
+            <div class="section-header">
+                <h2>Catálogo de Productos</h2>
+                <button class="btn-primary" onclick="showModal('productModal')">+ Nuevo Producto</button>
+            </div>
+            <div class="filter-bar">
+                <select id="filterProductCategory" onchange="filterProducts()">
+                    <option value="">Todas las Categorías</option>
+                    <option value="Oncología">Oncología</option>
+                    <option value="Cardiología">Cardiología</option>
+                    <option value="Endocrinología">Endocrinología</option>
+                    <option value="Reumatología">Reumatología</option>
+                    <option value="Gastroenterología">Gastroenterología</option>
+                </select>
+                <select id="filterRegulation" onchange="filterProducts()">
+                    <option value="">Regulación</option>
+                    <option value="Regulado">Regulado</option>
+                    <option value="No Regulado">No Regulado</option>
+                </select>
+                <select id="filterStockStatus" onchange="filterProducts()">
+                    <option value="">Stock</option>
+                    <option value="En stock">En stock</option>
+                    <option value="Bajo stock">Bajo stock</option>
+                    <option value="Bajo pedido">Bajo pedido</option>
+                </select>
+            </div>
+            <div class="data-table-container" id="productsTable"></div>
+        </section>
+
+        <!-- Pipeline Section -->
+        <section class="content-section" id="section-pipeline">
+            <div class="section-header">
+                <h2>Pipeline de Ventas</h2>
+                <button class="btn-primary" onclick="showModal('opportunityModal')">+ Nueva Oportunidad</button>
+            </div>
+            <!-- Pipeline Kanban View -->
+            <div class="pipeline-kanban" id="pipelineKanban"></div>
+        </section>
+
+        <!-- Orders Section -->
+        <section class="content-section" id="section-orders">
+            <div class="section-header">
+                <h2>Pedidos</h2>
+                <button class="btn-primary" onclick="showModal('orderModal')">+ Nuevo Pedido</button>
+            </div>
+            <div class="data-table-container" id="ordersTable"></div>
+        </section>
+
+        <!-- Interactions Section -->
+        <section class="content-section" id="section-interactions">
+            <div class="section-header">
+                <h2>Interacciones</h2>
+                <button class="btn-primary" onclick="showModal('interactionModal')">+ Nueva Interacción</button>
+            </div>
+            <div class="data-table-container" id="interactionsTable"></div>
+        </section>
+
+        <!-- Payments Section -->
+        <section class="content-section" id="section-payments">
+            <div class="section-header">
+                <h2>Pagos</h2>
+                <button class="btn-primary" onclick="showModal('paymentModal')">+ Nuevo Pago</button>
+            </div>
+            <div class="data-table-container" id="paymentsTable"></div>
+        </section>
+
+        <!-- Import Data Section -->
+        <section class="content-section" id="section-import">
+            <div class="section-header">
+                <h2>Importar Datos</h2>
+            </div>
+            <div class="import-container">
+                <div class="import-card">
+                    <div class="import-icon">📄</div>
+                    <h3>Importar desde Excel / CSV</h3>
+                    <p>Sube un archivo .xlsx o .csv para importar datos a cualquier tabla del CRM.</p>
+                    <div class="import-form">
+                        <select id="importTargetTable" class="import-select">
+                            <option value="">Seleccionar tabla destino...</option>
+                            <option value="clients">Clientes</option>
+                            <option value="products">Productos</option>
+                            <option value="opportunities">Oportunidades</option>
+                            <option value="orders">Pedidos</option>
+                            <option value="interactions">Interacciones</option>
+                            <option value="payments">Pagos</option>
+                            <option value="decision_makers">Tomadores de Decisión</option>
+                        </select>
+                        <div class="file-upload-zone" id="fileUploadZone">
+                            <input type="file" id="importFile" accept=".xlsx,.xls,.csv" hidden>
+                            <div class="upload-content">
+                                <span class="upload-icon">☁️</span>
+                                <p>Arrastra tu archivo aquí o <button class="btn-link" onclick="document.getElementById('importFile').click()">selecciona un archivo</button></p>
+                                <span class="upload-hint">Formatos: .xlsx, .xls, .csv</span>
+                            </div>
+                        </div>
+                        <div class="import-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="detectDuplicates" checked>
+                                Detectar duplicados
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="updateExisting">
+                                Actualizar registros existentes
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="validateData" checked>
+                                Validar integridad de datos
+                            </label>
+                        </div>
+                        <div class="column-mapping" id="columnMapping" style="display:none;">
+                            <h4>Mapeo de Columnas</h4>
+                            <div id="mappingFields"></div>
+                        </div>
+                        <div class="import-preview" id="importPreview" style="display:none;">
+                            <h4>Vista Previa de Datos</h4>
+                            <div id="previewTable"></div>
+                            <div class="import-summary" id="importSummary"></div>
+                        </div>
+                        <div class="import-actions">
+                            <button class="btn-primary" id="btnProcessImport" onclick="processImport()" disabled>Importar Datos</button>
+                            <button class="btn-secondary" onclick="resetImport()">Limpiar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="import-card">
+                    <div class="import-icon">📊</div>
+                    <h3>Google Sheets</h3>
+                    <p>Conecta con Google Sheets para sincronizar datos automáticamente.</p>
+                    <div class="import-form">
+                        <input type="text" class="import-input" placeholder="URL de Google Sheets..." id="googleSheetsUrl">
+                        <button class="btn-primary" onclick="connectGoogleSheets()">Conectar</button>
+                        <p class="import-note">Instrucciones: Comparte el documento con acceso de lectura y pega la URL aquí.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPIs Section -->
+        <section class="content-section" id="section-kpis">
+            <div class="section-header">
+                <h2>KPIs y Análisis</h2>
+            </div>
+            <div class="kpi-dashboard">
+                <!-- Revenue KPIs -->
+                <div class="kpi-section-card">
+                    <h3>📊 Ingresos y Ventas</h3>
+                    <div class="kpi-detail-grid" id="kpiRevenueGrid"></div>
+                </div>
+                <!-- Pipeline KPIs -->
+                <div class="kpi-section-card">
+                    <h3>📈 Pipeline Comercial</h3>
+                    <div class="kpi-detail-grid" id="kpiPipelineGrid"></div>
+                </div>
+                <!-- Client KPIs -->
+                <div class="kpi-section-card">
+                    <h3>👥 Análisis de Clientes</h3>
+                    <div class="kpi-detail-grid" id="kpiClientGrid"></div>
+                </div>
+                <!-- Product KPIs -->
+                <div class="kpi-section-card">
+                    <h3>💊 Productos y Márgenes</h3>
+                    <div class="kpi-detail-grid" id="kpiProductGrid"></div>
+                </div>
+                <!-- Operations KPIs -->
+                <div class="kpi-section-card">
+                    <h3>⚙️ Operaciones</h3>
+                    <div class="kpi-detail-grid" id="kpiOpsGrid"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Template -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle">Nuevo Registro</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn-primary" id="modalSaveBtn" onclick="saveRecord()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+# Modelo de Datos de CRM y Estrategia de KPIs para Distribución Farmacéutica
+## Infraestructura para el Crecimiento y la Toma de Decisiones Estratégicas
+
+# Contexto del Negocio
+## Distribución especializada a Doctores, Clínicas y Hospitales.
+* Gestión de relaciones (CRM).
+* Seguimiento de oportunidades.
+* Análisis del desempeño comercial.
+
+# Objetivos del CRM
+## Centralización y Inteligencia de Datos
+* Registro 360 de clientes.
+* Monitoreo del pipeline de ventas.
+* Análisis de demanda y retención.
+* Generación de KPIs para inversionistas.
+
+# Entidades Principales del CRM
+## Arquitectura de Datos Relacional
+* Clientes (Doctores/Clínicas/Hospitales).
+* Tomadores de decisión.
+* Productos (Medicamentos).
+* Oportunidades, Pedidos, Interacciones y Pagos.
+
+# Estructura de Datos: Clientes
+## Perfil Comercial y Estatus
+* ID, Tipo, Especialidad, Ubicación.
+* Estado: Potencial / Propuesta / Cerrado.
+* Análisis de Churn: Razón de pérdida (Precio, Competencia, etc.).
+
+# Estructura de Datos: Productos
+## Inteligencia de Inventario
+* ID, Categoría Terapéutica, Fabricante.
+* Precio unitario y requisitos de almacenamiento.
+* Importancia: Análisis de demanda segmentada.
+
+# Estructura del Pipeline de Ventas
+## El Embudo Comercial
+* Etapas: Potencial -> Contactado -> Propuesta -> Negociación -> Cierre.
+* Predicción de ingresos basada en probabilidad.
+
+# Seguimiento de Pedidos e Ingresos
+## Trazabilidad Transaccional
+* Registro detallado por Cliente/Producto.
+* Valor total y estado del pago.
+* Alimentación automática de métricas financieras.
+
+# Seguimiento de Interacciones
+## Gestión de Relaciones de Alta Confianza
+* Registro de Visitas, Llamadas y Conferencias.
+* Mejora continua en la atención personalizada.
+
+# Marco de KPIs (Dashboard)
+## Métricas de Salud del Negocio
+* Ingresos Mensuales (MRR).
+* Conversion Rate (Oportunidades -> Pedidos).
+* Valor Promedio del Pedido (AOV).
+
+# KPIs de Desempeño Comercial
+## Segmentación Estratégica
+* Top 10 Clientes y Médicos.
+* Ventas por Representante.
+* Crecimiento por categoría de producto.
+
+# Análisis de Retención (Churn)
+## Minimizando la Pérdida de Clientes
+* Clientes activos vs. inactivos.
+* Análisis de causas de pérdida.
+* Customer Lifetime Value (CLV).
+
+# Insights Estratégicos
+## Preguntas que el CRM Responde
+* ¿Dónde enfocar al equipo de ventas?
+* ¿Qué medicamentos crecen más rápido?
+* Razones de pérdida vs. Competencia.
+
+# CRM + Inteligencia Artificial
+## El Futuro de la Distribución
+* Lead Scoring predictivo.
+* Detección temprana de pérdida de clientes.
+* Optimización de rutas de visita.
+
+# Hoja de Ruta de Implementación
+## Plan de Ejecución
+1. Modelo de Datos.
+2. Limpieza de historial.
+3. Registro de interacciones.
+4. Dashboards de KPIs.
+
+# Conclusión
+## El Valor del Activo de Datos
+* Eficiencia operativa mejorada.
+* Transparencia metódica para inversionistas.
+* Crecimiento escalable basado en datos.
