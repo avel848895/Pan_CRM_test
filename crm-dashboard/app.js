@@ -12,21 +12,47 @@ const getClientById = (id) => CRM_DATA.clients.find(c => c.client_id === id);
 const getProductById = (id) => CRM_DATA.products.find(p => p.product_id === id);
 const getProductName = (id) => { const p = getProductById(id); return p ? p.medicine_name : '—'; };
 
-// --- LocalStorage Persistence ---
-function saveToStorage() {
-    localStorage.setItem('PANAGRO_CRM_DATA', JSON.stringify(CRM_DATA));
-}
+// --- API Persistence ---
+const API_URL = ''; // Same origin
 
-function loadFromStorage() {
-    const saved = localStorage.getItem('PANAGRO_CRM_DATA');
-    if (saved) {
-        const parsed = JSON.parse(saved);
-        Object.keys(parsed).forEach(key => {
-            if (CRM_DATA[key]) CRM_DATA[key] = parsed[key];
+async function saveRecordToAPI(table, data, id = null) {
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `${API_URL}/api/${table}/${id}` : `${API_URL}/api/${table}`;
+    
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
         });
+        return await response.json();
+    } catch (err) {
+        console.error('API Error:', err);
+        showToast('error', 'Error al sincronizar con el servidor');
     }
 }
-loadFromStorage();
+
+async function loadFromAPI() {
+    try {
+        const response = await fetch(`${API_URL}/api/data`);
+        const data = await response.json();
+        Object.keys(data).forEach(key => {
+            if (CRM_DATA[key]) CRM_DATA[key] = data[key];
+        });
+        initAllSections();
+    } catch (err) {
+        console.error('Failed to load data from API:', err);
+        // Fallback to localStorage if server is down (optional)
+        const saved = localStorage.getItem('PANAGRO_CRM_DATA');
+        if (saved) {
+             const parsed = JSON.parse(saved);
+             Object.keys(parsed).forEach(key => {
+                 if (CRM_DATA[key]) CRM_DATA[key] = parsed[key];
+             });
+             initAllSections();
+        }
+    }
+}
 
 function badgeClass(val) {
     const map = { 'Pagado': 'success', 'Completo': 'success', 'Activo': 'success', 'Cerrado': 'success', 'Cerrado Ganado': 'success', 'En stock': 'success', 'Alto': 'info',
@@ -490,20 +516,24 @@ function saveRecord() {
             // Update existing record
             const index = CRM_DATA[table].findIndex(r => r[idField] === currentEditId);
             if (index !== -1) {
-                // Keep the ID and merge other data
                 data[idField] = currentEditId;
                 CRM_DATA[table][index] = { ...CRM_DATA[table][index], ...data };
+                saveRecordToAPI(table, data, currentEditId);
                 showToast('success', 'Registro actualizado exitosamente');
             }
         } else {
             // Create new record
-            data[idField] = Math.max(...CRM_DATA[table].map(r => r[idField]), 0) + 1;
-            CRM_DATA[table].push(data);
+            saveRecordToAPI(table, data).then(res => {
+                if (res && res.id) {
+                    data[idField] = res.id;
+                    CRM_DATA[table].push(data);
+                    initAllSections();
+                }
+            });
             showToast('success', 'Registro creado exitosamente');
         }
         
         closeModal();
-        saveToStorage(); // Persistir cambios
         initAllSections();
     }
 }
@@ -693,4 +723,7 @@ function initAllSections() {
     renderKPIsDashboard();
 }
 
-document.addEventListener('DOMContentLoaded', initAllSections);
+document.addEventListener('DOMContentLoaded', () => {
+    initAllSections();
+    loadFromAPI();
+});
