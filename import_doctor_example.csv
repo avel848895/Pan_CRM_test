@@ -1,0 +1,4 @@
+client_type,doctor_name,specialty,phone,email,city,zona,direccion,relationship_level,notes
+Doctor,Dr. Juan Perez,Cardiologia,+507-6111-2222,jperez@cardiocare.pa,Ciudad de Panama,Zona Este,Calle 74 San Francisco PH 74 Piso 2,Medio,Nuevo cliente interesado en linea de hipertension.
+Doctor,Dra. Elena Sanchez,Pediatria,+507-6222-3333,esanchez@pediamed.com,David,Zona Occidente,Avenida 2da Este David Chiriqui Centro,Bajo,Contacto inicial durante congreso medico.
+Doctor,Dr. Roberto Gomez,Nefrologia,+507-6555-4444,rgomez@nefron.pa,Chitre,Zona Central Interior,Calle 5ta Chitre Herrera Palacio Municipal,Alto,Prescriptor clave con alto volumen de pacientes cronicos.

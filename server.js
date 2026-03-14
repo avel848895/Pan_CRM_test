@@ -24,9 +24,47 @@ const run = (sql, params = []) => new Promise((resolve, reject) => {
     });
 });
 
+// --- Automated Activity Status Logic ---
+async function refreshActivityStatus() {
+    // Step 1: Compute each client's last order date
+    // Step 2: Update activity_status based on 30/90 day thresholds
+    // Clients with a manual lost_reason are NOT overridden
+    const sql = `
+        UPDATE clients SET
+            activity_status = CASE
+                WHEN lost_reason IS NOT NULL THEN 'Perdido'
+                WHEN (
+                    SELECT MAX(o.order_date) FROM orders o WHERE o.client_id = clients.client_id
+                ) >= date('now', '-30 days') THEN 'Activo'
+                WHEN (
+                    SELECT MAX(o.order_date) FROM orders o WHERE o.client_id = clients.client_id
+                ) >= date('now', '-90 days') THEN 'Inactivo'
+                WHEN (
+                    SELECT MAX(o.order_date) FROM orders o WHERE o.client_id = clients.client_id
+                ) IS NULL THEN 'Inactivo'
+                ELSE 'Perdido'
+            END,
+            inactive_date = CASE
+                WHEN lost_reason IS NOT NULL THEN inactive_date
+                WHEN (
+                    SELECT MAX(o.order_date) FROM orders o WHERE o.client_id = clients.client_id
+                ) < date('now', '-30 days') AND inactive_date IS NULL THEN date('now')
+                WHEN (
+                    SELECT MAX(o.order_date) FROM orders o WHERE o.client_id = clients.client_id
+                ) >= date('now', '-30 days') THEN NULL
+                ELSE inactive_date
+            END
+        WHERE lost_reason IS NULL;
+    `;
+    await run(sql);
+}
+
 // API Endpoints
 app.get('/api/data', async (req, res) => {
     try {
+        // Refresh activity statuses before returning data
+        await refreshActivityStatus();
+
         const tables = ['clients', 'products', 'opportunities', 'orders', 'order_details', 'interactions', 'payments', 'decision_makers'];
         const data = {};
         
@@ -92,6 +130,18 @@ app.put('/api/:table/:id', async (req, res) => {
         await run(`UPDATE ${table} SET ${setClause} WHERE ${idColumn} = ?`, values);
         res.json({ success: true });
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Manual trigger for activity status refresh
+app.post('/api/refresh-activity-status', async (req, res) => {
+    try {
+        await refreshActivityStatus();
+        const clients = await query('SELECT client_id, doctor_name, institution_name, activity_status, inactive_date FROM clients');
+        res.json({ success: true, updated: clients.length, clients });
+    } catch (err) {
+        console.error('Refresh Error:', err);
         res.status(500).json({ error: err.message });
     }
 });
