@@ -512,6 +512,36 @@ function saveRecord() {
 const fileUploadZone = document.getElementById('fileUploadZone');
 const importFileInput = document.getElementById('importFile');
 
+document.getElementById('importTargetTable').addEventListener('change', (e) => {
+    const table = e.target.value;
+    const btnTemplate = document.getElementById('btnDownloadTemplate');
+    if (btnTemplate) btnTemplate.disabled = !table;
+    
+    if (importedData && importedData.headers) {
+        showColumnMapping(importedData.headers);
+        if (document.getElementById('importTargetTable').value) {
+            showImportPreview();
+        }
+    }
+});
+
+function downloadTemplate() {
+    const table = document.getElementById('importTargetTable').value;
+    if (!table || !TABLE_FIELDS[table]) {
+        showToast('warning', 'Seleccione una tabla destino primero');
+        return;
+    }
+    const fields = TABLE_FIELDS[table];
+    const csvContent = "data:text/csv;charset=utf-8," + fields.join(',') + "\n";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `plantilla_${table}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 fileUploadZone.addEventListener('click', () => importFileInput.click());
 fileUploadZone.addEventListener('dragover', e => { e.preventDefault(); fileUploadZone.classList.add('drag-over'); });
 fileUploadZone.addEventListener('dragleave', () => fileUploadZone.classList.remove('drag-over'));
@@ -632,7 +662,12 @@ function processImport() {
         TABLE_FIELDS[targetTable].forEach(field => newRecord[field] = null);
         
         Object.entries(columnMap).forEach(([source, target]) => {
-            newRecord[target] = row[source];
+            let val = row[source];
+            if (val && (target.includes('price') || target.includes('amount') || target.includes('volume') || target.includes('quantity') || target.includes('margin') || target.endsWith('_id') || target.endsWith('value'))) {
+                const num = parseFloat(val);
+                if (!isNaN(num)) val = num;
+            }
+            newRecord[target] = val;
         });
 
         // Asegurar que el nombre sea visible
@@ -658,6 +693,7 @@ function processImport() {
 
 function resetImport() {
     importedData = null;
+    document.getElementById('importFile').value = '';
     document.getElementById('importPreview').style.display = 'none';
     document.getElementById('columnMapping').style.display = 'none';
     document.getElementById('btnProcessImport').disabled = true;

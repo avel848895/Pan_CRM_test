@@ -284,16 +284,19 @@
                     <h3>Importar desde Excel / CSV</h3>
                     <p>Sube un archivo .xlsx o .csv para importar datos a cualquier tabla del CRM.</p>
                     <div class="import-form">
-                        <select id="importTargetTable" class="import-select">
-                            <option value="">Seleccionar tabla destino...</option>
-                            <option value="clients">Clientes</option>
-                            <option value="products">Productos</option>
-                            <option value="opportunities">Oportunidades</option>
-                            <option value="orders">Pedidos</option>
-                            <option value="interactions">Interacciones</option>
-                            <option value="payments">Pagos</option>
-                            <option value="decision_makers">Tomadores de Decisión</option>
-                        </select>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <select id="importTargetTable" class="import-select" style="margin-bottom: 0; flex-grow: 1;">
+                                <option value="">Seleccionar tabla destino...</option>
+                                <option value="clients">Clientes</option>
+                                <option value="products">Productos</option>
+                                <option value="opportunities">Oportunidades</option>
+                                <option value="orders">Pedidos</option>
+                                <option value="interactions">Interacciones</option>
+                                <option value="payments">Pagos</option>
+                                <option value="decision_makers">Tomadores de Decisión</option>
+                            </select>
+                            <button class="btn-secondary" id="btnDownloadTemplate" onclick="downloadTemplate()" disabled title="Descargar plantilla CSV">⬇️ Plantilla</button>
+                        </div>
                         <div class="file-upload-zone" id="fileUploadZone">
                             <input type="file" id="importFile" accept=".xlsx,.xls,.csv" hidden>
                             <div class="upload-content">
