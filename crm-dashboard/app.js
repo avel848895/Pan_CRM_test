@@ -101,8 +101,8 @@ function renderTable(containerId, headers, rows) {
 // --- Dashboard KPIs ---
 function updateDashboard() {
     // Monthly revenue (March 2026)
-    const marchOrders = CRM_DATA.orders.filter(o => o.order_date.startsWith('2026-03'));
-    const febOrders = CRM_DATA.orders.filter(o => o.order_date.startsWith('2026-02'));
+    const marchOrders = CRM_DATA.orders.filter(o => o.order_date && o.order_date.startsWith('2026-03'));
+    const febOrders = CRM_DATA.orders.filter(o => o.order_date && o.order_date.startsWith('2026-02'));
     const marchRev = marchOrders.reduce((s, o) => s + o.total_order_value, 0);
     const febRev = febOrders.reduce((s, o) => s + o.total_order_value, 0);
     const growth = febRev > 0 ? ((marchRev - febRev) / febRev * 100) : 0;
@@ -520,21 +520,23 @@ function saveRecord() {
                 CRM_DATA[table][index] = { ...CRM_DATA[table][index], ...data };
                 saveRecordToAPI(table, data, currentEditId);
                 showToast('success', 'Registro actualizado exitosamente');
+                initAllSections();
             }
         } else {
             // Create new record
             saveRecordToAPI(table, data).then(res => {
-                if (res && res.id) {
+                if (res && res.success) {
                     data[idField] = res.id;
                     CRM_DATA[table].push(data);
+                    showToast('success', 'Registro creado exitosamente');
                     initAllSections();
+                } else {
+                    showToast('error', 'Error al crear el registro');
                 }
             });
-            showToast('success', 'Registro creado exitosamente');
         }
         
         closeModal();
-        initAllSections();
     }
 }
 
@@ -666,7 +668,7 @@ function showImportPreview() {
     document.getElementById('btnProcessImport').disabled = false;
 }
 
-function processImport() {
+async function processImport() {
     if (!importedData) return;
     const targetTable = document.getElementById('importTargetTable').value;
     if (!targetTable || !CRM_DATA[targetTable]) { showToast('error', 'Tabla de destino no válida'); return; }
@@ -685,13 +687,19 @@ function processImport() {
 
     let count = 0;
     const idField = TABLE_FIELDS[targetTable][0];
-    let nextId = Math.max(...CRM_DATA[targetTable].map(r => r[idField]), 0) + 1;
+    
+    showToast('info', `Iniciando importación de ${importedData.rows.length} registros...`);
+    document.getElementById('btnProcessImport').disabled = true;
 
-    importedData.rows.forEach(row => {
+    for (const row of importedData.rows) {
         const newRecord = {};
-        TABLE_FIELDS[targetTable].forEach(field => newRecord[field] = null);
+        // Initialize fields with null, excluding the ID if it's auto-increment
+        TABLE_FIELDS[targetTable].forEach(field => {
+            if (field !== idField) newRecord[field] = null;
+        });
         
         Object.entries(columnMap).forEach(([source, target]) => {
+            if (target === idField) return; // Skip manual ID
             let val = row[source];
             if (val && (target.includes('price') || target.includes('amount') || target.includes('volume') || target.includes('quantity') || target.includes('margin') || target.endsWith('_id') || target.endsWith('value'))) {
                 const num = parseFloat(val);
@@ -700,7 +708,7 @@ function processImport() {
             newRecord[target] = val;
         });
 
-        // Asegurar que el nombre sea visible
+        // Asegurar que el nombre sea visible para clientes
         if (targetTable === 'clients') {
             if (!newRecord.doctor_name && !newRecord.institution_name) {
                 const anyName = row['Nombre_o_Institucion'] || row['Nombre'] || row['Name'] || Object.values(row)[0];
@@ -710,15 +718,17 @@ function processImport() {
             if (!newRecord.client_status) newRecord.client_status = 'Potencial';
         }
 
-        newRecord[idField] = nextId++;
-        CRM_DATA[targetTable].push(newRecord);
-        count++;
-    });
+        try {
+            await saveRecordToAPI(targetTable, newRecord);
+            count++;
+        } catch (err) {
+            console.error('Import individual record error:', err);
+        }
+    }
 
-    saveToStorage(); // Guardar cambios permanentemente
-    showToast('success', `¡${count} registros importados exitosamente!`);
+    showToast('success', `¡${count} de ${importedData.rows.length} registros importados exitosamente!`);
     resetImport();
-    initAllSections();
+    await loadFromAPI(); // Sincronizar todos los datos
 }
 
 function resetImport() {

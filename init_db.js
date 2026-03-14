@@ -6,15 +6,7 @@ const DB_PATH = path.join(__dirname, 'panagro.db');
 const SCHEMA_PATH = path.join(__dirname, 'database', 'schema.sql');
 const DATA_PATH = path.join(__dirname, 'database', 'sample_data.sql');
 
-try {
-    if (fs.existsSync(DB_PATH)) {
-        fs.unlinkSync(DB_PATH);
-    }
-} catch (e) {
-    console.warn('Warning: Could not delete existing database (possibly in use). Continuing...');
-}
-
-const db = new sqlite3.Database(DB_PATH);
+console.log('--- Database Initialization Script ---');
 
 function adaptSql(sql) {
     return sql
@@ -24,42 +16,38 @@ function adaptSql(sql) {
         .replace(/\bDATE\b/gi, 'TEXT')
         .replace(/\bSERIAL\b/gi, 'INTEGER')
         .replace(/::DECIMAL/gi, '')
-        .replace(/GENERATED ALWAYS AS \(.*\) STORED/gi, '') // Simplified for SQLite if version is old, but let's try keeping it first 
-        // Actually, let's remove generated columns and handle logic in JS if needed, or just let SQLite try.
-        // Let's remove them to be safe on compatibility.
-        .replace(/gross_margin        NUMERIC GENERATED ALWAYS AS \(.*\) STORED,/gi, '')
-        .replace(/total_price         NUMERIC GENERATED ALWAYS AS \(.*\) STORED,/gi, '')
+        .replace(/gross_margin\s+NUMERIC\s+GENERATED ALWAYS AS\s*\(.*?\)\s*STORED,/gi, '')
+        .replace(/total_price\s+NUMERIC\s+GENERATED ALWAYS AS\s*\(.*?\)\s*STORED,/gi, '')
         .replace(/CREATE OR REPLACE VIEW/gi, 'CREATE VIEW')
-        .replace(/DATE_TRUNC\('month', (.*?)\)/gi, "strftime('%Y-%m-01', $1)")
-        // Fix any accidental corruption from previous runs
+        .replace(/DATE_TRUNC\('month',\s*(.*?)\)/gi, "strftime('%Y-%m-01', $1)")
         .replace(/_TEXT/g, '_date')
         .replace(/upTEXTd/g, 'updated');
 }
 
-db.serialize(() => {
-    console.log('--- Initializing Database ---');
+// Ensure the DB file is closed and removed if possible
+try {
+    if (fs.existsSync(DB_PATH)) {
+        fs.unlinkSync(DB_PATH);
+        console.log('Removed existing database.');
+    }
+} catch (e) {
+    console.warn('Warning: Could not delete existing database file. It might be locked.');
+}
 
-    // Load and adapt schema
+const db = new sqlite3.Database(DB_PATH);
+
+db.serialize(() => {
+    console.log('--- Initializing Schema ---');
     const schemaSql = fs.readFileSync(SCHEMA_PATH, 'utf8');
     const adaptedSchema = adaptSql(schemaSql);
-    
-    // Split into individual statements - very basic splitter
-    const schemaStatements = adaptedSchema.split(';').filter(s => s.trim().length > 0);
-    
-    schemaStatements.forEach(stmt => {
-        if (stmt.toLowerCase().includes('create view')) {
-            // Views might need more complex adaptation, skipping for now to focus on tables
-            return;
-        }
-        db.run(stmt + ';', (err) => {
-    const schemaStatements = adaptSql(schemaSql).split(';').filter(s => s.trim());
-    
-    console.log(`Executing ${schemaStatements.length} schema statements...`);
+    const schemaStatements = adaptedSchema.split(';').filter(s => s.trim());
+
     for (const sql of schemaStatements) {
-        db.run(sql, (err) => {
+        db.run(sql + ';', (err) => {
             if (err) {
-                if (!sql.includes('CREATE VIEW')) { // Views might fail if tables not ready, but usually fine
-                    console.error('Error executing schema statement:', err.message);
+                // Views may fail if they depend on Postgres-specific date functions we haven't adapted 100%
+                if (!sql.toLowerCase().includes('create view')) {
+                    console.error('Error in schema statement:', err.message);
                     console.error('Statement:', sql.substring(0, 100) + '...');
                 }
             }
@@ -67,17 +55,27 @@ db.serialize(() => {
     }
 
     console.log('--- Seeding Data ---');
-    const dataSql = fs.readFileSync(DATA_PATH, 'utf8');
-    const adaptedData = adaptSql(dataSql);
-    const dataStatements = adaptedData.split(';').filter(s => s.trim().length > 0);
+    if (fs.existsSync(DATA_PATH)) {
+        const dataSql = fs.readFileSync(DATA_PATH, 'utf8');
+        const adaptedData = adaptSql(dataSql);
+        const dataStatements = adaptedData.split(';').filter(s => s.trim());
 
-    dataStatements.forEach(stmt => {
-        db.run(stmt + ';', (err) => {
-            if (err) console.error('Error executing seed statement:', err.message);
-        });
-    });
-
-    console.log('--- Database Initialized! ---');
+        for (const sql of dataStatements) {
+            db.run(sql + ';', (err) => {
+                if (err) {
+                    console.error('Error in seed statement:', err.message);
+                }
+            });
+        }
+    } else {
+        console.warn('Sample data file not found at:', DATA_PATH);
+    }
 });
 
-db.close();
+db.close((err) => {
+    if (err) {
+        console.error('Error closing database:', err.message);
+    } else {
+        console.log('--- Database Initialized Successfully ---');
+    }
+});

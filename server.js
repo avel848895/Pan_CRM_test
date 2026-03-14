@@ -31,11 +31,22 @@ app.get('/api/data', async (req, res) => {
         const data = {};
         
         for (const table of tables) {
-            data[table] = await query(`SELECT * FROM ${table}`);
+            let rows = await query(`SELECT * FROM ${table}`);
+            
+            // Fix corrupted field names from DB if any
+            data[table] = rows.map(row => {
+                const fixedRow = {};
+                for (let key in row) {
+                    let fixedKey = key.replace(/_TEXT/g, '_date').replace(/upTEXTd/g, 'updated');
+                    fixedRow[fixedKey] = row[key];
+                }
+                return fixedRow;
+            });
         }
         
         res.json(data);
     } catch (err) {
+        console.error('API Error:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -43,14 +54,24 @@ app.get('/api/data', async (req, res) => {
 app.post('/api/:table', async (req, res) => {
     const { table } = req.params;
     const records = req.body;
-    const fields = Object.keys(records);
+    
+    // Reverse fix for DB naming if corrupted
+    const dbRecords = {};
+    for (let key in records) {
+        // This is a temporary safety measure. Ideally DB should be clean.
+        dbRecords[key] = records[key];
+    }
+    
+    const fields = Object.keys(dbRecords);
     const placeholders = fields.map(() => '?').join(',');
-    const values = Object.values(records);
+    const values = Object.values(dbRecords);
     
     try {
-        const result = await run(`INSERT INTO ${table} (${fields.join(',')}) VALUES (${placeholders})`, values);
+        const sql = `INSERT INTO ${table} (${fields.join(',')}) VALUES (${placeholders})`;
+        const result = await run(sql, values);
         res.json({ success: true, id: result.id });
     } catch (err) {
+        console.error('POST Error:', err);
         res.status(500).json({ error: err.message });
     }
 });

@@ -9,7 +9,7 @@
 -- ============================================================
 CREATE TABLE IF NOT EXISTS clients (
     client_id           SERIAL PRIMARY KEY,
-    client_type         VARCHAR(20) NOT NULL CHECK (client_type IN ('Doctor', 'Clínica', 'Hospital', 'Farmacia')),
+    client_type         VARCHAR(20) NOT NULL CHECK (client_type IN ('Doctor', 'Clínica', 'Hospital', 'Farmacia', 'Distribuidora', 'Gubernamental', 'Otro')),
     institution_name    VARCHAR(200),
     doctor_name         VARCHAR(150),
     specialty           VARCHAR(100),
@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS clients (
     email               VARCHAR(150),
     city                VARCHAR(100),
     country             VARCHAR(80) DEFAULT 'Panamá',
+    zona                VARCHAR(50),
+    direccion           TEXT,
     relationship_level  VARCHAR(10) CHECK (relationship_level IN ('Alto', 'Medio', 'Bajo')),
     
     -- Estado del cliente (Funnel)
