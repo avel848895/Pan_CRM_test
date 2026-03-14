@@ -6,9 +6,25 @@
 const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
 const fmtDec = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 const pct = (n) => `${n.toFixed(1)}%`;
-const getClientName = (c) => c.institution_name || c.doctor_name || '—';
-const getProductName = (id) => (CRM_DATA.products.find(p => p.product_id === id) || {}).medicine_name || '—';
+const getClientName = (c) => c.institution_name || c.doctor_name || c.name || '—';
+const getProductByName = (name) => CRM_DATA.products.find(p => p.medicine_name === name);
 const getClientById = (id) => CRM_DATA.clients.find(c => c.client_id === id);
+
+// --- LocalStorage Persistence ---
+function saveToStorage() {
+    localStorage.setItem('PANAGRO_CRM_DATA', JSON.stringify(CRM_DATA));
+}
+
+function loadFromStorage() {
+    const saved = localStorage.getItem('PANAGRO_CRM_DATA');
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        Object.keys(parsed).forEach(key => {
+            if (CRM_DATA[key]) CRM_DATA[key] = parsed[key];
+        });
+    }
+}
+loadFromStorage();
 
 function badgeClass(val) {
     const map = { 'Pagado': 'success', 'Completo': 'success', 'Activo': 'success', 'Cerrado': 'success', 'Cerrado Ganado': 'success', 'En stock': 'success', 'Alto': 'info',
@@ -174,8 +190,15 @@ function renderClients(data) {
         { label: 'Funnel', render: r => `<span class="${badgeClass(r.client_status)}">${r.client_status}</span>` },
         { label: 'Actividad', render: r => `<span class="${badgeClass(r.activity_status)}">${r.activity_status}</span>` },
         { label: 'Representante', key: 'sales_representative' },
-        { label: 'Último Contacto', key: 'last_contact_date' }
+        { label: 'Acciones', render: r => `<button class="btn-icon" onclick="editClient(${r.client_id})" title="Editar">✏️</button>` }
     ], data || CRM_DATA.clients);
+}
+
+function editClient(id) {
+    const client = CRM_DATA.clients.find(c => c.client_id === id);
+    if (client) {
+        showModal('clientModal', client);
+    }
 }
 
 function filterClients() {
@@ -360,22 +383,27 @@ function kpiItem(label, value, sub) {
 
 // --- Modal System ---
 let currentModalType = '';
+let currentEditId = null;
 
-function showModal(type) {
+function showModal(type, editData = null) {
     currentModalType = type;
+    currentEditId = editData ? (editData.client_id || editData.product_id || editData.opportunity_id || editData.order_id || editData.interaction_id || editData.payment_id) : null;
+    
     const overlay = document.getElementById('modalOverlay');
     const body = document.getElementById('modalBody');
     const title = document.getElementById('modalTitle');
+    
     const forms = {
-        clientModal: { title: 'Nuevo Cliente', fields: [
-            { row: [{ label: 'Tipo', name: 'client_type', type: 'select', options: ['Doctor','Hospital','Clínica','Farmacia'] }, { label: 'Especialidad', name: 'specialty' }] },
-            { row: [{ label: 'Institución', name: 'institution_name' }, { label: 'Doctor', name: 'doctor_name' }] },
-            { row: [{ label: 'Teléfono', name: 'phone' }, { label: 'Email', name: 'email' }] },
-            { row: [{ label: 'Ciudad', name: 'city' }, { label: 'Zona', name: 'zona', type: 'select', options: ['Zona Central','Zona Norte','Zona Este','Zona Occidente','Zona Atlántico','Zona Central Interior'] }] },
-            { row: [{ label: 'Dirección', name: 'direccion' }, { label: 'País', name: 'country', value: 'Panamá' }] },
-            { row: [{ label: 'Nivel Relación', name: 'relationship_level', type: 'select', options: ['Alto','Medio','Bajo'] }, { label: 'Representante', name: 'sales_representative' }] },
-            { label: 'Notas', name: 'notes', type: 'textarea' }
+        clientModal: { title: editData ? 'Editar Cliente' : 'Nuevo Cliente', fields: [
+            { row: [{ label: 'Tipo', name: 'client_type', type: 'select', options: ['Doctor','Hospital','Clínica','Farmacia'], value: editData?.client_type }, { label: 'Especialidad', name: 'specialty', value: editData?.specialty }] },
+            { row: [{ label: 'Institución', name: 'institution_name', value: editData?.institution_name }, { label: 'Doctor', name: 'doctor_name', value: editData?.doctor_name }] },
+            { row: [{ label: 'Teléfono', name: 'phone', value: editData?.phone }, { label: 'Email', name: 'email', value: editData?.email }] },
+            { row: [{ label: 'Ciudad', name: 'city', value: editData?.city }, { label: 'Zona', name: 'zona', type: 'select', options: ['Zona Central','Zona Norte','Zona Este','Zona Occidente','Zona Atlántico','Zona Central Interior'], value: editData?.zona }] },
+            { row: [{ label: 'Dirección', name: 'direccion', value: editData?.direccion }, { label: 'País', name: 'country', value: editData?.country || 'Panamá' }] },
+            { row: [{ label: 'Nivel Relación', name: 'relationship_level', type: 'select', options: ['Alto','Medio','Bajo'], value: editData?.relationship_level }, { label: 'Representante', name: 'sales_representative', value: editData?.sales_representative }] },
+            { label: 'Notas', name: 'notes', type: 'textarea', value: editData?.notes }
         ]},
+        // ... rest of forms could be updated similarly if needed, for now focusing on clients as requested
         productModal: { title: 'Nuevo Producto', fields: [
             { row: [{ label: 'Medicamento', name: 'medicine_name' }, { label: 'Categoría', name: 'category' }] },
             { row: [{ label: 'Fabricante', name: 'manufacturer' }, { label: 'Proveedor', name: 'supplier' }] },
@@ -423,18 +451,20 @@ function showModal(type) {
 
 function renderField(f) {
     let input;
+    const val = f.value ?? '';
     if (f.type === 'client_select') {
         const clientOptions = CRM_DATA.clients.map(c => {
             const name = getClientName(c);
-            return `<option value="${c.client_id}">${c.client_id} — ${name}</option>`;
+            const selected = String(c.client_id) === String(val) ? 'selected' : '';
+            return `<option value="${c.client_id}" ${selected}>${c.client_id} — ${name}</option>`;
         }).join('');
         input = `<select class="form-select" name="${f.name}"><option value="">Seleccionar cliente...</option>${clientOptions}</select>`;
     } else if (f.type === 'select') {
-        input = `<select class="form-select" name="${f.name}">${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}</select>`;
+        input = `<select class="form-select" name="${f.name}">${f.options.map(o => `<option value="${o}" ${o === val ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
     } else if (f.type === 'textarea') {
-        input = `<textarea class="form-textarea" name="${f.name}"></textarea>`;
+        input = `<textarea class="form-textarea" name="${f.name}">${val}</textarea>`;
     } else {
-        input = `<input class="form-input" type="${f.type || 'text'}" name="${f.name}" ${f.value ? `value="${f.value}"` : ''}>`;
+        input = `<input class="form-input" type="${f.type || 'text'}" name="${f.name}" value="${val}">`;
     }
     return `<div class="form-group"><label class="form-label">${f.label}</label>${input}</div>`;
 }
@@ -444,16 +474,34 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 function saveRecord() {
     const body = document.getElementById('modalBody');
     const data = {};
-    body.querySelectorAll('input, select, textarea').forEach(el => { data[el.name] = el.type === 'number' ? parseFloat(el.value) || 0 : el.value; });
+    body.querySelectorAll('input, select, textarea').forEach(el => { 
+        data[el.name] = el.type === 'number' ? parseFloat(el.value) || 0 : el.value; 
+    });
     
     const tableMap = { clientModal: 'clients', productModal: 'products', opportunityModal: 'opportunities', orderModal: 'orders', interactionModal: 'interactions', paymentModal: 'payments' };
     const table = tableMap[currentModalType];
+    
     if (table && CRM_DATA[table]) {
         const idField = TABLE_FIELDS[table][0];
-        data[idField] = Math.max(...CRM_DATA[table].map(r => r[idField]), 0) + 1;
-        CRM_DATA[table].push(data);
-        showToast('success', 'Registro creado exitosamente');
+        
+        if (currentEditId) {
+            // Update existing record
+            const index = CRM_DATA[table].findIndex(r => r[idField] === currentEditId);
+            if (index !== -1) {
+                // Keep the ID and merge other data
+                data[idField] = currentEditId;
+                CRM_DATA[table][index] = { ...CRM_DATA[table][index], ...data };
+                showToast('success', 'Registro actualizado exitosamente');
+            }
+        } else {
+            // Create new record
+            data[idField] = Math.max(...CRM_DATA[table].map(r => r[idField]), 0) + 1;
+            CRM_DATA[table].push(data);
+            showToast('success', 'Registro creado exitosamente');
+        }
+        
         closeModal();
+        saveToStorage(); // Persistir cambios
         initAllSections();
     }
 }
@@ -489,14 +537,33 @@ function handleFile(file) {
 }
 
 function parseCSV(text) {
+    const rows = [];
     const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const rows = lines.slice(1).map(line => {
-        const vals = line.split(',').map(v => v.trim().replace(/"/g, ''));
+    if (lines.length < 2) return;
+
+    // Helper to parse CSV row correctly handling quotes
+    const parseRow = (line) => {
+        const result = [];
+        let cur = '', inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"' && line[i+1] === '"') { cur += '"'; i++; }
+            else if (char === '"') inQuotes = !inQuotes;
+            else if (char === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; }
+            else cur += char;
+        }
+        result.push(cur.trim());
+        return result;
+    };
+
+    const headers = parseRow(lines[0]);
+    for (let i = 1; i < lines.length; i++) {
+        const vals = parseRow(lines[i]);
         const obj = {};
-        headers.forEach((h, i) => obj[h] = vals[i] || '');
-        return obj;
-    });
+        headers.forEach((h, idx) => obj[h] = vals[idx] || '');
+        rows.push(obj);
+    }
+    
     importedData = { headers, rows };
     showColumnMapping(headers);
     showImportPreview();
@@ -538,8 +605,53 @@ function showImportPreview() {
 }
 
 function processImport() {
-    showToast('success', `¡${importedData?.rows.length || 0} registros importados exitosamente!`);
+    if (!importedData) return;
+    const targetTable = document.getElementById('importTargetTable').value;
+    if (!targetTable || !CRM_DATA[targetTable]) { showToast('error', 'Tabla de destino no válida'); return; }
+
+    const mappingFields = document.getElementById('mappingFields');
+    const columnMap = {};
+    
+    // Obtener el mapeo de columnas del usuario
+    mappingFields.querySelectorAll('.mapping-row').forEach(row => {
+        const source = row.querySelector('.mapping-source').textContent;
+        const target = row.querySelector('.mapping-target select').value;
+        if (target) columnMap[source] = target;
+    });
+
+    if (Object.keys(columnMap).length === 0) { showToast('warning', 'Debe mapear al menos una columna'); return; }
+
+    let count = 0;
+    const idField = TABLE_FIELDS[targetTable][0];
+    let nextId = Math.max(...CRM_DATA[targetTable].map(r => r[idField]), 0) + 1;
+
+    importedData.rows.forEach(row => {
+        const newRecord = {};
+        TABLE_FIELDS[targetTable].forEach(field => newRecord[field] = null);
+        
+        Object.entries(columnMap).forEach(([source, target]) => {
+            newRecord[target] = row[source];
+        });
+
+        // Asegurar que el nombre sea visible
+        if (targetTable === 'clients') {
+            if (!newRecord.doctor_name && !newRecord.institution_name) {
+                const anyName = row['Nombre_o_Institucion'] || row['Nombre'] || row['Name'] || Object.values(row)[0];
+                newRecord.doctor_name = anyName;
+            }
+            if (!newRecord.activity_status) newRecord.activity_status = 'Activo';
+            if (!newRecord.client_status) newRecord.client_status = 'Potencial';
+        }
+
+        newRecord[idField] = nextId++;
+        CRM_DATA[targetTable].push(newRecord);
+        count++;
+    });
+
+    saveToStorage(); // Guardar cambios permanentemente
+    showToast('success', `¡${count} registros importados exitosamente!`);
     resetImport();
+    initAllSections();
 }
 
 function resetImport() {

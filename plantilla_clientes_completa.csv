@@ -1,0 +1,4 @@
+client_type,institution_name,doctor_name,specialty,phone,email,city,zona,direccion,country,relationship_level,client_status,activity_status,sales_representative,notes
+Doctor,,Dr. Juan Perez,Cardiología,+507-6000-1111,jperez@email.com,Ciudad de Panamá,Zona Central,"Ave. Balboa, Edif. Sky, Local 4",Panamá,Alto,Cerrado,Activo,Ana Castillo,Cliente referido por Dr. Mendoza
+Hospital,Hospital Regional,,General,+507-999-8888,compras@hregional.com,Santiago,Zona Central Interior,Vía Interamericana,Panamá,Medio,Negociación,Activo,Miguel López,En proceso de licitación Q3
+Farmacia,FarmaAhorro,,General,+507-6555-4444,info@farmaahorro.com,David,Zona Occidente,Calle 4ta David Centro,Panamá,Bajo,Propuesta,Activo,Carlos Vega,Interesados en línea genérica
